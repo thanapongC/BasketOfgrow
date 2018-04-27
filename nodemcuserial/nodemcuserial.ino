@@ -1,5 +1,8 @@
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h> 
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>  
 #include <FirebaseArduino.h>
 #include <time.h>
 #include <SoftwareSerial.h>
@@ -12,8 +15,8 @@ SoftwareSerial NodeSerial(D2, D3); // RX | TX
 //const char* ssid = "NoomJungle"; 
 //const char* pass = "0876641405"; 
 
-const char* ssid = ".iApp"; 
-const char* pass = "innovation"; 
+//const char* ssid = ".iApp"; 
+//const char* pass = "innovation"; 
 
 //const char* ssid = "ICTES_Lab-2G"; 
 //const char* pass = "officett4321"; 
@@ -32,10 +35,12 @@ String Moisture,temp,humid,light,PH;
 #define FIREBASE_KEY "CPZ7GRwCunbmhTPXlXtSAynaJxH9BiRSPduqdGte"
 #define pumpwaterrelay1 D5
 #define lightrelay2 D6
+#define ConfigWiFi_Pin D2
+#define ESP_AP_NAME "ESP8266 Config AP"
 
 
 void setup() {
-  
+  pinMode(ConfigWiFi_Pin,INPUT_PULLUP);
   pinMode(pumpwaterrelay1,OUTPUT);
   pinMode(lightrelay2,OUTPUT);
   
@@ -52,18 +57,22 @@ void setup() {
               delay(1000);
               }
               
-    WiFi.begin(ssid, pass);
-       while (WiFi.status() != WL_CONNECTED) 
-       {
-          delay(250);
-          Serial.print(".");
-          digitalWrite(lightrelay2,LOW);
-          digitalWrite(pumpwaterrelay1,LOW); 
-       }
+ WiFiManager wifiManager;
+  if(digitalRead(ConfigWiFi_Pin) == LOW) // Press button
+  {
+    wifiManager.resetSettings(); // go to ip 192.168.4.1 to config
+  }
 
-   Serial.println("WiFi connected");  
-   Serial.println("IP address: ");
-   Serial.println(WiFi.localIP());
+  wifiManager.autoConnect(ESP_AP_NAME); 
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+     delay(250);
+     Serial.print(".");
+  }
+  Serial.println("WiFi connected");  
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
    
    digitalWrite(lightrelay2,HIGH);
    digitalWrite(pumpwaterrelay1,LOW); 
