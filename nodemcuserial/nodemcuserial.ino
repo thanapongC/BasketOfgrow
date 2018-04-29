@@ -60,7 +60,7 @@ void setup() {
        {
           delay(250);
           Serial.print(".");
-          digitalWrite(lightrelay2,LOW);
+          digitalWrite(lightrelay2,HIGH);
           digitalWrite(pumpwaterrelay1,LOW); 
        }
 
