@@ -18,8 +18,8 @@ SoftwareSerial NodeSerial(D2, D3); // RX | TX
 //const char* ssid = ".iApp"; 
 //const char* pass = "innovation"; 
 
-//const char* ssid = "ICTES_Lab-2G"; 
-//const char* pass = "officett4321"; 
+const char* ssid = "ICTES_Lab-2G"; 
+const char* pass = "officett4321"; 
 
 //const char* ssid = "Not_2.4GHz"; 
 //const char* pass = "0894122322"; 
@@ -35,12 +35,10 @@ String Moisture,temp,humid,light,PH;
 #define FIREBASE_KEY "CPZ7GRwCunbmhTPXlXtSAynaJxH9BiRSPduqdGte"
 #define pumpwaterrelay1 D5
 #define lightrelay2 D6
-#define ConfigWiFi_Pin D2
-#define ESP_AP_NAME "ESP8266 Config AP"
 
 
 void setup() {
-  pinMode(ConfigWiFi_Pin,INPUT_PULLUP);
+  
   pinMode(pumpwaterrelay1,OUTPUT);
   pinMode(lightrelay2,OUTPUT);
   
@@ -57,22 +55,18 @@ void setup() {
               delay(1000);
               }
               
- WiFiManager wifiManager;
-  if(digitalRead(ConfigWiFi_Pin) == LOW) // Press button
-  {
-    wifiManager.resetSettings(); // go to ip 192.168.4.1 to config
-  }
+    WiFi.begin(ssid, pass);
+       while (WiFi.status() != WL_CONNECTED) 
+       {
+          delay(250);
+          Serial.print(".");
+          digitalWrite(lightrelay2,LOW);
+          digitalWrite(pumpwaterrelay1,LOW); 
+       }
 
-  wifiManager.autoConnect(ESP_AP_NAME); 
-  while (WiFi.status() != WL_CONNECTED) 
-  {
-     delay(250);
-     Serial.print(".");
-  }
-  Serial.println("WiFi connected");  
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-
+   Serial.println("WiFi connected");  
+   Serial.println("IP address: ");
+   Serial.println(WiFi.localIP());
    
    digitalWrite(lightrelay2,HIGH);
    digitalWrite(pumpwaterrelay1,LOW); 
@@ -156,10 +150,10 @@ void loop() {
   String pump = Firebase.getString("grow/"+ deviceNumber + "/device/relay220v2");
   String setmoisture = Firebase.getString("grow/"+ deviceNumber +"/device/setmoisture");
   String switchselect = Firebase.getString("grow/"+ deviceNumber +"/switchselect/");
-  String lightfirebasestart = Firebase.getString("grow/"+ deviceNumber +"/device/relay220v1starttime");
-  String lightfirebaseend = Firebase.getString("grow/"+ deviceNumber +"/device/relay220v1endtime");
-  String pumpfirebasestart = Firebase.getString("grow/"+ deviceNumber +"/device/relay220v2starttime");
-  String pumpfirebaseend = Firebase.getString("grow/"+ deviceNumber +"/device/relay220v2endtime");
+  String lightfirebasestart = Firebase.getString("grow/"+ deviceNumber +"/device/relay220v1/starttime");
+  String lightfirebaseend = Firebase.getString("grow/"+ deviceNumber +"/device/relay220v1/endtime");
+  String pumpfirebasestart = Firebase.getString("grow/"+ deviceNumber +"/device/relay220v2/starttime");
+  String pumpfirebaseend = Firebase.getString("grow/"+ deviceNumber +"/device/relay220v2/endtime");
 
    if(switchselect == "manual"){
 
@@ -246,6 +240,11 @@ void loop() {
     }
 
    delay(1000);
+          if (WiFi.status() != WL_CONNECTED) 
+       {
+          digitalWrite(lightrelay2,HIGH);
+          digitalWrite(pumpwaterrelay1,LOW); 
+       }
 
 }
 
