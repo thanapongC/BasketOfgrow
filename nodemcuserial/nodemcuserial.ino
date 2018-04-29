@@ -18,8 +18,8 @@ SoftwareSerial NodeSerial(D2, D3); // RX | TX
 //const char* ssid = ".iApp"; 
 //const char* pass = "innovation"; 
 
-const char* ssid = "ICTES_Lab-2G"; 
-const char* pass = "officett4321"; 
+//const char* ssid = "ICTES_Lab-2G"; 
+//const char* pass = "officett4321"; 
 
 //const char* ssid = "Not_2.4GHz"; 
 //const char* pass = "0894122322"; 
@@ -35,15 +35,37 @@ String Moisture,temp,humid,light,PH;
 #define FIREBASE_KEY "CPZ7GRwCunbmhTPXlXtSAynaJxH9BiRSPduqdGte"
 #define pumpwaterrelay1 D5
 #define lightrelay2 D6
+#define ConfigWiFi_Pin D1
+#define ESP_AP_NAME "Basket Of Grow"
 
 
 void setup() {
-  
+  pinMode(ConfigWiFi_Pin,INPUT_PULLUP);
   pinMode(pumpwaterrelay1,OUTPUT);
   pinMode(lightrelay2,OUTPUT);
   
   Serial.begin(115200);
   NodeSerial.begin(4800);
+
+  WiFiManager wifiManager;
+    if(digitalRead(ConfigWiFi_Pin) == LOW) // Press button
+  {
+    wifiManager.resetSettings(); // go to ip 192.168.4.1 to config
+  }
+
+  wifiManager.autoConnect(ESP_AP_NAME); 
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+     delay(250);
+     Serial.print(".");
+  }
+
+   Serial.println("WiFi connected");  
+   Serial.println("IP address: ");
+   Serial.println(WiFi.localIP());
+   
+   digitalWrite(lightrelay2,HIGH);
+   digitalWrite(pumpwaterrelay1,LOW); 
 
   Firebase.begin(FIREBASE_HOST, FIREBASE_KEY);
   
@@ -55,21 +77,7 @@ void setup() {
               delay(1000);
               }
               
-    WiFi.begin(ssid, pass);
-       while (WiFi.status() != WL_CONNECTED) 
-       {
-          delay(250);
-          Serial.print(".");
-          digitalWrite(lightrelay2,HIGH);
-          digitalWrite(pumpwaterrelay1,LOW); 
-       }
-
-   Serial.println("WiFi connected");  
-   Serial.println("IP address: ");
-   Serial.println(WiFi.localIP());
-   
-   digitalWrite(lightrelay2,HIGH);
-   digitalWrite(pumpwaterrelay1,LOW); 
+ 
   
 }
 
@@ -90,11 +98,6 @@ void loop() {
          Serial.print("Light : "+light+"|");
          Serial.print("Moisture : "+Moisture+"|");
          Serial.println("PH : "+PH+"|");  
-         if(temp.toInt() >= 0 || temp.toInt() <= 60 ||
-            humid.toInt() >= 1 || humid.toInt() <= 100 ||
-            Moisture.toInt() >= 0 || Moisture.toInt() <= 100 ||
-            PH.toInt() >= 3 || PH.toInt() <= 8 ||
-            light.toInt() < 0 || light.toInt() > 1){ 
           StaticJsonBuffer<200> jsonBuffer;
           JsonObject& valueObject = jsonBuffer.createObject();
           valueObject["AirTemp"] = temp;
@@ -104,7 +107,7 @@ void loop() {
           valueObject["Light"] = light;
           Firebase.set("grow/"+ deviceNumber + "/value/", valueObject);
           Serial.println("Put Data To Firebase.......!!");
-         }
+         
     delay(10000);
   }
  }
